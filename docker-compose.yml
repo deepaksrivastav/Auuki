@@ -1,0 +1,19 @@
+services:
+  auuki-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  auuki-sync-backend:
+    build: ./auuki-sync-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./.garmin_tokens:/data/garmin_tokens:Z
+    environment:
+      - API_KEY=your_secret_bearer_token
+      - GARMIN_TOKEN_STORE=/data/garmin_tokens
+    restart: unless-stopped

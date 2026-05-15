@@ -1,5 +1,6 @@
 import { xf, exists, equals } from './functions.js';
 import { models } from './models/models.js';
+import customApi from './models/custom-api.js';
 import { Sound } from './sound.js';
 import { idb } from './storage/idb.js';
 import { ControlMode, } from './ble/enums.js';
@@ -65,6 +66,8 @@ let db = {
     dockMode: models.dockMode.default,
     measurement: models.measurement.default,
     volume: models.volume.default,
+    customApiUrl: models.customApiUrl.default,
+    customApiKey: models.customApiKey.default,
 
     // UI options
     powerSmoothing: 0,
@@ -350,6 +353,12 @@ xf.reg('watch:stopped', (_, db) => {
 xf.reg('activity:save:success', (e, db) => {
     models.session.reset(db);
 });
+xf.reg('activity:add', async (summary, db) => {
+    if(db.customApiUrl && db.customApiKey) {
+        const record = await idb.get('activity', summary.id);
+        await customApi.uploadWorkout(record);
+    }
+});
 xf.sub('ui:activity:upload:by:id', (id) => {
     models.activity.upload(id);
 });
@@ -395,6 +404,15 @@ xf.reg(`ant:search:stopped`, (x, db) => {
     db.antSearchList = [];
 });
 
+xf.reg('ui:custom-api:url-set', (value, db) => {
+    db.customApiUrl = models.customApiUrl.parser(value);
+    models.customApiUrl.storage.set(db.customApiUrl);
+});
+xf.reg('ui:custom-api:key-set', (value, db) => {
+    db.customApiKey = models.customApiKey.parser(value);
+    models.customApiKey.storage.set(db.customApiKey);
+});
+
 xf.reg('auth', (x, db) => {
     // TODO: remove?
 });
@@ -415,7 +433,9 @@ xf.reg('app:start', async function(_, db) {
     db.theme = models.theme.set(models.theme.restore());
     db.measurement = models.measurement.set(models.measurement.restore());
     db.volume = models.volume.set(models.volume.restore());
-    db.dataTileSwitch = models.dataTileSwitch.set(models.dataTileSwitch.restore()),
+    db.dataTileSwitch = models.dataTileSwitch.set(models.dataTileSwitch.restore());
+    db.customApiUrl = models.customApiUrl.restore();
+    db.customApiKey = models.customApiKey.restore();
 
     db.sources = models.sources.set(models.sources.restore());
 

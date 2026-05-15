@@ -1,6 +1,7 @@
 import './connection-switch.js';
 import './data-views.js';
 import './auth-forms.js';
+import './custom-api-settings.js';
 import './effect-views.js';
 import './editor.js';
 import './tabs.js';

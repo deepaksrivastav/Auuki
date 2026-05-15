@@ -6,6 +6,14 @@
 /gists/
 /src/simulation-scripts.js
 **/.DS_Store
+**/__pycache__/
+**/*.py[cod]
+**/venv/
+**/.venv/
+**/.env
+**/.env.*
+**/.garmin_tokens/
+**/build/
 **/dev_cert
 .cache
 notes.txt

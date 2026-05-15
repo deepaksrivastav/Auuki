@@ -546,6 +546,30 @@ class DataTileSwitch extends Model {
     }
 }
 
+class CustomApiUrl extends Model {
+    postInit(args = {}) {
+        this.storage = LocalStorageItem({
+            key: this.prop,
+            fallback: this.defaultValue(),
+            parse: String,
+            encode: String,
+        });
+    }
+    defaultValue() { return ''; }
+}
+
+class CustomApiKey extends Model {
+    postInit(args = {}) {
+        this.storage = LocalStorageItem({
+            key: this.prop,
+            fallback: this.defaultValue(),
+            parse: String,
+            encode: String,
+        });
+    }
+    defaultValue() { return ''; }
+}
+
 class Activity extends Model {
     // var activity = {
     //         id: UUID,
@@ -1600,6 +1624,8 @@ const dockMode = new DockMode({prop: 'dockMode', storage: LocalStorageItem});
 const volume = new Volume({prop: 'volume', storage: LocalStorageItem});
 const measurement = new Measurement({prop: 'measurement', storage: LocalStorageItem});
 const dataTileSwitch = new DataTileSwitch({prop: 'dataTileSwitch', storage: LocalStorageItem});
+const customApiUrl = new CustomApiUrl({prop: 'customApiUrl'});
+const customApiKey = new CustomApiKey({prop: 'customApiKey'});
 
 const power1s = new PropInterval({prop: 'db:power', effect: 'power1s', interval: 1000});
 const power3s = new PropInterval({prop: 'db:power', effect: 'power3s', interval: 3000});
@@ -1650,6 +1676,8 @@ let models = {
     theme,
     measurement,
     dataTileSwitch,
+    customApiUrl,
+    customApiKey,
 
     activity,
     workout,

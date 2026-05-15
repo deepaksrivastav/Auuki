@@ -6,6 +6,7 @@ import strava from './strava.js';
 import intervals from './intervals.js';
 import trainingPeaks from './training-peaks.js';
 import auth from './auth.js';
+import customApi from './custom-api.js';
 
 
 //
@@ -25,6 +26,7 @@ function API() {
         strava,
         intervals,
         trainingPeaks,
+        customApi,
         start,
         stop,
     });

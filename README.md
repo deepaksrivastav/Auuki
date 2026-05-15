@@ -23,6 +23,80 @@ _Status_: Currently working on creating a full suite of Apple platform native ap
 - There is also a special development version which has the latest features available for preview: [dev.auuki.com](https://dev.auuki.com)
 - [How to create a Profile and Connect Intervals.icu](https://forum.intervals.icu/t/auuki-com-intervals-icu-integration/87105)
 
+## Running with the Sync Backend (Garmin Connect)
+
+The optional sync backend is a small FastAPI service that receives `.FIT` activity files from the app and uploads them to Garmin Connect. It runs alongside the frontend and is managed via Docker Compose.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+
+### 1. Configure environment variables
+
+```bash
+cp auuki-sync-backend/.env.example auuki-sync-backend/.env
+```
+
+Edit `auuki-sync-backend/.env`:
+
+```env
+GARMIN_EMAIL=your@email.com
+GARMIN_PASSWORD=your_garmin_password
+API_KEY=your_secret_bearer_token   # choose any strong random string
+GARMIN_TOKEN_STORE=.garmin_tokens
+```
+
+### 2. Build the images
+
+Docker:
+```bash
+docker compose build
+```
+
+Podman:
+```bash
+podman compose build
+```
+
+### 3. Start both services
+
+Docker:
+```bash
+docker compose up
+```
+
+Podman:
+```bash
+podman compose up
+```
+
+This starts:
+| Service | URL |
+|---|---|
+| Frontend (Auuki app) | http://localhost:3000 |
+| Sync backend (Garmin upload) | http://localhost:8000 |
+
+### 3. Connect the app to the backend
+
+In the Auuki app, open **Settings → Custom API** and enter:
+
+- **URL**: `http://localhost:8000`
+- **API Key**: the value you set for `API_KEY` in your `.env`
+
+After saving, completed workouts will automatically be uploaded to Garmin Connect.
+
+### Running the backend standalone (without Docker)
+
+```bash
+cd auuki-sync-backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # then edit .env
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+---
+
 ## Sponsors 💖
 So, if you’re loving what Auuki’s bringing to the table, consider supporting the project on [GitHub Sponsors](https://github.com/sponsors/dvmarinoff)? Think of it as buying me a coffee or, heck, a whole power meter to keep this thing cranking. Hit that sponsor button and let’s keep the good times rolling!
 
