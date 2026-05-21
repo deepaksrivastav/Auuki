@@ -13,7 +13,8 @@ services:
       - "8000:8000"
     volumes:
       - ./.garmin_tokens:/data/garmin_tokens:Z
+      - ./fit_files:/opt/data/fit_files
     environment:
-      - API_KEY=your_secret_bearer_token
       - GARMIN_TOKEN_STORE=/data/garmin_tokens
+      - FIT_STORE_DIR=/opt/data/fit_files
     restart: unless-stopped

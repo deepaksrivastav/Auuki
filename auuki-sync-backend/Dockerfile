@@ -9,11 +9,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py garmin_client.py ./
 
-RUN mkdir -p /data/garmin_tokens && chown appuser:appuser /data/garmin_tokens
+RUN mkdir -p /data/garmin_tokens /opt/data/fit_files \
+    && chown -R appuser:appuser /data /opt/data
 
 USER appuser
 
-ENV GARMIN_TOKEN_STORE=/data/garmin_tokens
+ENV GARMIN_TOKEN_STORE=/data/garmin_tokens \
+    FIT_STORE_DIR=/opt/data/fit_files
 
 EXPOSE 8000
 

@@ -92,6 +92,7 @@ cd auuki-sync-backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env   # then edit .env
+export $(grep -v '^#' .env | xargs)
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
