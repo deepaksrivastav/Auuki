@@ -80,10 +80,10 @@ class Watch {
         xf.sub('ui:watchResume',  e => { self.resume();         });
         xf.sub('ui:watchLap',     e => { self.lap();            });
         xf.sub('ui:watchBack',    e => { self.back();           });
-        xf.sub('ui:watchStop',    e => {
-            const stop = confirm('Confirm Stop?');
-            if(stop) {
-                self.stop();
+        xf.sub('ui:watchStop', async e => {
+            const stopAction = await self.confirmStop();
+            if(stopAction) {
+                self.stop({save: stopAction});
             }
         });
     }
@@ -230,9 +230,45 @@ class Watch {
             type: EventType.stop,
         });
     }
-    stop() {
+    confirmStop() {
+        const dialogSupported = (
+            typeof HTMLDialogElement !== 'undefined' &&
+            typeof document.createElement('dialog').showModal === 'function'
+        );
+
+        if(!dialogSupported) {
+            const stopAction = prompt('Stop and sync activity to Garmin? Type yes to save and sync, no to save only, or discard.')?.toLowerCase();
+            if(stopAction === 'yes')     return 'sync';
+            if(stopAction === 'no')      return 'local';
+            if(stopAction === 'discard') return 'discard';
+            return false;
+        }
+
+        return new Promise(resolve => {
+            const dialog = document.createElement('dialog');
+            dialog.innerHTML = `
+                <form method="dialog" style="display: grid; gap: 1rem; min-width: min(20rem, 80vw);">
+                    <p style="margin: 0;">Stop and sync activity to Garmin?</p>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
+                        <button value="sync">Yes</button>
+                        <button value="local">No</button>
+                        <button value="discard">Discard</button>
+                    </div>
+                </form>
+            `;
+            dialog.addEventListener('close', () => {
+                const value = dialog.returnValue;
+                dialog.remove();
+                resolve(value || false);
+            }, {once: true});
+            document.body.append(dialog);
+            dialog.showModal();
+        });
+    }
+    stop(args = {}) {
         const self = this;
         if(self.isStarted() || self.isPaused()) {
+            const save = args.save ?? 'sync';
             timer.postMessage('stop');
 
             xf.dispatch('watch:event', {
@@ -248,7 +284,7 @@ class Watch {
             self.lap();
 
             // should be called after event and lap are created
-            xf.dispatch('watch:stopped');
+            xf.dispatch('watch:stopped', {save});
 
             if(exists(self.intervals)) {
                 xf.dispatch('watch:intervalIndex', 0);

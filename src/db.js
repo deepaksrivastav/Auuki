@@ -340,9 +340,14 @@ xf.reg('ui:workout:upload', async function(files, db) {
     }
 
 });
-xf.reg('watch:stopped', (_, db) => {
+xf.reg('watch:stopped', (args = {}, db) => {
+    if(args.save === 'discard') {
+        xf.dispatch('activity:save:success');
+        return;
+    }
+
     try {
-        models.activity.createFromCurrent(db);
+        models.activity.createFromCurrent(db, {sync: args.save !== 'local'});
         xf.dispatch('activity:save:success');
     } catch (err) {
         console.error(`Error on activity save: `, err);
@@ -353,7 +358,7 @@ xf.reg('watch:stopped', (_, db) => {
 xf.reg('activity:save:success', (e, db) => {
     models.session.reset(db);
 });
-xf.reg('activity:add', async (summary, db) => {
+xf.reg('activity:sync', async (summary, db) => {
     if(db.customApiUrl && db.customApiKey) {
         const record = await idb.get('activity', summary.id);
         await customApi.uploadWorkout(record);
@@ -490,4 +495,3 @@ function start () {
 start();
 
 export { db };
-

@@ -592,7 +592,8 @@ class Activity extends Model {
         this.capacity = 7;
     }
     defaultValue() { return []; }
-    createFromCurrent(db) {
+    createFromCurrent(db, args = {}) {
+        const sync = args.sync ?? true;
         const id = uuid();
         const blob = fileHandler.toBlob(this.encode(db));
         const name = db.workout?.meta?.name ?? 'Powered by Auuki workout';
@@ -613,6 +614,9 @@ class Activity extends Model {
         this.add(summary, db.activity);
         idb.put('activity', record);
         xf.dispatch('activity:add', summary);
+        if(sync) {
+            xf.dispatch('activity:sync', summary);
+        }
     }
     add(activity, activityList) {
         activityList.unshift(activity);
