@@ -1,7 +1,9 @@
+import asyncio
 import json
 import logging
 import os
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from garmin_client import upload_to_garmin
+from garmin_client import get_client, upload_to_garmin
 
 load_dotenv()
 
@@ -19,8 +21,35 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(mes
 log = logging.getLogger(__name__)
 
 FIT_STORE_DIR = Path(os.getenv("FIT_STORE_DIR", "/opt/data/fit_files"))
+GARMIN_KEEP_ALIVE_INTERVAL = 24 * 60 * 60
 
-app = FastAPI(title="Auuki Sync Backend")
+
+
+async def _garmin_keep_alive() -> None:
+    while True:
+        try:
+            api = await asyncio.to_thread(get_client)
+            await asyncio.to_thread(api.get_full_name)
+            log.info("Garmin keep-alive succeeded")
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            log.exception("Garmin keep-alive failed")
+
+        await asyncio.sleep(GARMIN_KEEP_ALIVE_INTERVAL)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    keep_alive_task = asyncio.create_task(_garmin_keep_alive())
+    try:
+        yield
+    finally:
+        keep_alive_task.cancel()
+        await asyncio.gather(keep_alive_task, return_exceptions=True)
+
+
+app = FastAPI(title="Auuki Sync Backend", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
